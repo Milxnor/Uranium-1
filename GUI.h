@@ -138,14 +138,14 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 	}
 
 	if (bShowWindow) {
-		InitStyle();
-
-		ImGui::SetNextWindowSize(ImVec2(360, 558));
-		ImGui::SetNextWindowBgAlpha(0.7f);
-
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
+
+		InitStyle();
+
+		ImGui::SetNextWindowSize(ImVec2(535, 320), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowBgAlpha(0.935);
 
 		const auto Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
@@ -194,6 +194,17 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 					if (ImGui::BeginTabItem("Game")) {
 						if (ImGui::Button("Exit Game")) {
 							exit(0);
+						}
+
+						static char BPToLoad[2048] = "";
+
+						ImGui::InputText("##BP", BPToLoad, IM_ARRAYSIZE(BPToLoad));
+
+						if (ImGui::Button("LoadBP"))
+						{
+							std::string BPToLoadAsString = (const char*)BPToLoad;
+
+							StaticLoadObject(FindObject(crypt("Class /Script/Engine.BlueprintGeneratedClass")), nullptr, (std::wstring(BPToLoadAsString.begin(), BPToLoadAsString.end()).c_str()));
 						}
 
 						ImGui::EndTabItem();
@@ -287,36 +298,14 @@ void SetupGUI()
 
 	bool init_hook = false;
 
-	switch (renderingApi)
+	do
 	{
-	case ERHIType::D3D11:
-		do
+		if (kiero::init(kiero::RenderType::D3D11) == kiero::Status::Success)
 		{
-			if (kiero::init(kiero::RenderType::D3D11) == kiero::Status::Success)
-			{
-				kiero::bind(8, (void**)&oPresent, hkPresent);
-				init_hook = true;
-			}
-		} while (!init_hook);
-		break;
-
-	case ERHIType::D3D12:
-		do
-		{
-			if (kiero::init(kiero::RenderType::D3D12) == kiero::Status::Success)
-			{
-				kiero::bind(8, (void**)&oPresent, hkPresent);
-				init_hook = true;
-			}
-		} while (!init_hook);
-		break;
-
-	case ERHIType::Performance:
-		break;
-
-	default:
-		break;
-	}
+			kiero::bind(8, (void**)&oPresent, hkPresent);
+			init_hook = true;
+		}
+	} while (!init_hook);
 
 	return;
 }

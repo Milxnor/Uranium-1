@@ -20,11 +20,7 @@ DWORD WINAPI DumpObjectThread(LPVOID param)
     return NULL;
 }
 
-FVector LastEmoteLoc;
-bool bIsEmoting;
-UObject* CurrentEmote;
 bool bIsPickingUp = false;
-UObject* OldCheat;
 
 void* (*PEOG)(void*, void*, void*);
 void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
@@ -35,6 +31,18 @@ void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
         auto FullFuncName = pFunction->GetFullName();
 
         //printf("FuncName: %s\n", FuncName.c_str());
+
+        if (FullFuncName.find("PlayEmoteItem") != std::string::npos && pObject == Controller)
+        {
+            struct Params {
+                UObject* EmoteAsset;
+                EFortEmotePlayMode PlayMode;
+            };
+
+            auto params = (Params*)pParams;
+
+            std::cout << "EmoteDef: " << params->EmoteAsset->GetFullName() << std::endl;
+        }
 
         if (FullFuncName.find(crypt("ServerExecuteInventoryItem")) != std::string::npos && FortInventory)
         {
@@ -264,6 +272,18 @@ void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
             inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Athena/Items/Ammo/AmmoInfinite_NoIcon.AmmoInfinite_NoIcon")), 999);
             inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Athena/Items/Ammo/AmmoDataRockets.AmmoDataRockets")), 999);
             inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Athena/Items/Ammo/AmmoDataPetrol.AmmoDataPetrol")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBotTurret.AmmoDataBotTurret")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBulletsHeavy.AmmoDataBulletsHeavy")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBulletsLight.AmmoDataBulletsLight")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBulletsMedium.AmmoDataBulletsMedium")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataEnergyCell.AmmoDataEnergyCell")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataExplosive.AmmoDataExplosive")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataFragGrenades.AmmoDataFragGrenades")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataFragments.AmmoDataFragments")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataProximityMines.AmmoDataProximityMines")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataShells.AmmoDataShells")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoInfiniteEnergy.AmmoInfiniteEnergy")), 999);
+            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/SkulldudeData.SkulldudeData")), 999);
             //playerControllerFunctions->SetInfiniteAmmo(Controller);
             gamestateFunctions->SetGamePhase(EAthenaGamePhase::None, EAthenaGamePhase::Warmup);
             pawnFunctions->TeleportToSkydive(60000);
