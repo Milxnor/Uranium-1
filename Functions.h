@@ -110,7 +110,27 @@ public:
 class KismetLibraryFunctions
 {
 public:
+	void OverridePawnCosmetic(UObject* InFortPlayerPawn, std::string CosmeticFullName)
+	{
+		auto Cosmetic = FindObject(CosmeticFullName);
+
+		struct
+		{
+			UObject* Pawn;
+			UObject* Cosmetic;
+		} params;
+
+		params.Pawn = InFortPlayerPawn;
+		params.Cosmetic = Cosmetic;
+
+		auto Default__FortItemAndVariantSwapHelpers = FindObject("Default__FortItemAndVariantSwapHelpers");
+
+		ProcessEvent(Default__FortItemAndVariantSwapHelpers, FindObject("Function /Script/FortniteGame.FortItemAndVariantSwapHelpers.PushCosmeticOverrideOntoPawn"), &params);
+	}
+
 	void ShowSkin() {
+		OverridePawnCosmetic(Pawn, "AthenaCharacterItemDefinition /Game/Heroes/Commando/CosmeticCharacterItemDefinitions/CID_Commando_016_F_V1.CID_Commando_016_F_V1");
+
 		struct UFortKismetLibrary_UpdatePlayerCustomCharacterPartsVisualization_Params
 		{
 			UObject* PlayerState;
