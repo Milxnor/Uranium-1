@@ -20,7 +20,11 @@ DWORD WINAPI DumpObjectThread(LPVOID param)
     return NULL;
 }
 
+FVector LastEmoteLoc;
+bool bIsEmoting;
+UObject* CurrentEmote;
 bool bIsPickingUp = false;
+UObject* OldCheat;
 
 void* (*PEOG)(void*, void*, void*);
 void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
@@ -31,18 +35,6 @@ void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
         auto FullFuncName = pFunction->GetFullName();
 
         //printf("FuncName: %s\n", FuncName.c_str());
-
-        if (FullFuncName.find("PlayEmoteItem") != std::string::npos && pObject == Controller)
-        {
-            struct Params {
-                UObject* EmoteAsset;
-                EFortEmotePlayMode PlayMode;
-            };
-
-            auto params = (Params*)pParams;
-
-            std::cout << "EmoteDef: " << params->EmoteAsset->GetFullName() << std::endl;
-        }
 
         if (FullFuncName.find(crypt("ServerExecuteInventoryItem")) != std::string::npos && FortInventory)
         {
@@ -71,6 +63,12 @@ void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
                     ProcessEvent((UObject*)Pawn, EquiptWeaponFunc, &EquipWeaponDefinitionParams);
                 }
             }
+        }
+
+        if (FuncName.find(crypt("ServerAttemptInteract_Implementation")) != std::string::npos)
+        {
+            ShowMessage("attempted interaction");
+            //CreateThread(0, 0, BuildingActorFunctions::BuildAsync, 0, 0, 0);
         }
 
         if (FuncName.find(crypt("ServerHandlePickup")) != std::string::npos && FortInventory)
@@ -272,18 +270,6 @@ void* ProcessEventDetour(UObject* pObject, UObject* pFunction, void* pParams)
             inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Athena/Items/Ammo/AmmoInfinite_NoIcon.AmmoInfinite_NoIcon")), 999);
             inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Athena/Items/Ammo/AmmoDataRockets.AmmoDataRockets")), 999);
             inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Athena/Items/Ammo/AmmoDataPetrol.AmmoDataPetrol")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBotTurret.AmmoDataBotTurret")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBulletsHeavy.AmmoDataBulletsHeavy")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBulletsLight.AmmoDataBulletsLight")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataBulletsMedium.AmmoDataBulletsMedium")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataEnergyCell.AmmoDataEnergyCell")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataExplosive.AmmoDataExplosive")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataFragGrenades.AmmoDataFragGrenades")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataFragments.AmmoDataFragments")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataProximityMines.AmmoDataProximityMines")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoDataShells.AmmoDataShells")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/AmmoInfiniteEnergy.AmmoInfiniteEnergy")), 999);
-            inventoryFunctions->AddItemToInventory(FindObject(crypt("FortAmmoItemDefinition /Game/Items/Ammo/SkulldudeData.SkulldudeData")), 999);
             //playerControllerFunctions->SetInfiniteAmmo(Controller);
             gamestateFunctions->SetGamePhase(EAthenaGamePhase::None, EAthenaGamePhase::Warmup);
             pawnFunctions->TeleportToSkydive(60000);
@@ -322,10 +308,12 @@ DWORD WINAPI MainThread(LPVOID)
     auto pGObjects = Util::FindPattern(crypt("48 8B 05 ? ? ? ? 48 8B 0C C8 48 8B 04 D1"), true, 3);
     CHECKSIG(pGObjects, "Failed to find GObjects address!");
     GObjects = decltype(GObjects)(pGObjects);
+    std::cout << "Found GObjects address!\n";
 
-    auto pFNameToString = Util::FindPattern(crypt("48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 ? ? ? ? 8B 01 4C 8B F2 8B F8 0F B7 D8"));
+    auto pFNameToString = Util::FindPattern(crypt("48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 ? ? ? ? 8B"));
     CHECKSIG(pFNameToString, "Failed to find FNameToString address!");
     FNameToString = decltype(FNameToString)(pFNameToString);
+    std::cout << "Found FNameToString address!\n";
 
     /*auto pFNameToString = Util::FindByString(L"%s %s SetTimer passed a negative or zero time. The associated timer may fail to be created/fire! If using InitialStartDelayVariance, be sure it is smaller than (Time + InitialStartDelay).", {CALL}, true, 1);
     CHECKSIG(pFNameToString, "Failed to find FNameToString address!");
@@ -334,20 +322,22 @@ DWORD WINAPI MainThread(LPVOID)
     auto pFreeMemory = Util::FindPattern(crypt("48 85 C9 0F 84 ? ? ? ? 48 89 5C 24 ? 57 48 83 EC 20 48 8B 3D ? ? ? ? 48 8B D9 48"));
     CHECKSIG(pFreeMemory, "Failed to find FreeMemory address!");
     FreeMemory = decltype(FreeMemory)(pFreeMemory);
+    std::cout << "Found FreeMemory address!\n";
     
     auto pWorld = Util::FindPattern(crypt("48 8B 05 ? ? ? ? 4D 8B C1"), true, 3);
     CHECKSIG(pWorld, "Failed to find UWorld address!");
     World = reinterpret_cast<UObject**>(pWorld);
+    std::cout << "Found UWorld address!\n";
 
     auto FortEngine = FindObject(crypt("FortEngine /Engine/Transient.FortEngine"));
     auto FEVFT = *reinterpret_cast<void***>(FortEngine);
-    auto PEAddr = FEVFT[0x4B];
+    auto PEAddr = FEVFT[0x4C];
 
     MH_Initialize();
     MH_CreateHook((void*)PEAddr, ProcessEventDetour, (void**)(&PEOG));
     MH_EnableHook((void*)PEAddr);
 
-    //InitHooks();
+    InitHooks();
 
     Functions::UnlockConsole();
     Functions::UpdatePlayerController();
