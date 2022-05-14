@@ -50,21 +50,21 @@ void RequestExitWithStatusHook(bool Force, uint8_t ReturnCode)
 
 static void InitHooks()
 {
-    auto NotificationHookAddress = Util::FindPattern(crypt("4C 8B DC 55 49 8D AB ? ? ? ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 49 89 5B 20"));
+    /*auto NotificationHookAddress = Util::FindPattern(crypt("4C 8B DC 55 49 8D AB ? ? ? ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 49 89 5B 20"));
     if (!NotificationHookAddress) {
         NotificationHookAddress = Util::FindPattern(crypt("4C 8B DC 55 49 8D AB ? ? ? ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 49 89 73 F0 49 89 7B E8 48 8B F9 4D 89 63 E0 4D 8B E0 4D 89 6B D8"));
-    }
+    }*/
 
-    auto RequestExitWithStatusAddress = Util::FindPattern(crypt("48 8B C4 48 89 58 18 88 50 10 88 48 08 57 48 83 EC 30"));
+    auto RequestExitWithStatusAddress = Util::FindPattern(crypt("48 8B C4 48 89 58 18 88 50 10 88 48 08"));
     if (!RequestExitWithStatusAddress) {
         RequestExitWithStatusAddress = Util::FindPattern(crypt("48 89 5C 24 ? 57 48 83 EC 40 41 B9 ? ? ? ? 0F B6 F9 44 38 0D ? ? ? ? 0F B6 DA 72 24 89 5C 24 30 48 8D 05 ? ? ? ? 89 7C 24 28 4C 8D 05 ? ? ? ? 33 D2 48 89 44 24 ? 33 C9 E8 ? ? ? ?"));
     }
 
-    CHECKSIG(NotificationHookAddress, crypt("Failed to find Notification address!"));
+    //CHECKSIG(NotificationHookAddress, crypt("Failed to find Notification address!"));
     CHECKSIG(RequestExitWithStatusAddress, crypt("Failed to find RequestExitWithStatus address"));
 
     MH_CreateHook(static_cast<LPVOID>((LPVOID)RequestExitWithStatusAddress), RequestExitWithStatusHook, reinterpret_cast<LPVOID*>(&RequestExitWithStatusBypass));
     MH_EnableHook(static_cast<LPVOID>((LPVOID)RequestExitWithStatusAddress));
-    MH_CreateHook(static_cast<LPVOID>((LPVOID)NotificationHookAddress), ExitBypassHook, reinterpret_cast<LPVOID*>(&NotiBypass));
-    MH_EnableHook(static_cast<LPVOID>((LPVOID)NotificationHookAddress));
+    /*MH_CreateHook(static_cast<LPVOID>((LPVOID)NotificationHookAddress), ExitBypassHook, reinterpret_cast<LPVOID*>(&NotiBypass));
+    MH_EnableHook(static_cast<LPVOID>((LPVOID)NotificationHookAddress));*/
 }
