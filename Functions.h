@@ -110,27 +110,7 @@ public:
 class KismetLibraryFunctions
 {
 public:
-	void OverridePawnCosmetic(UObject* InFortPlayerPawn, std::string CosmeticFullName)
-	{
-		auto Cosmetic = FindObject(CosmeticFullName);
-
-		struct
-		{
-			UObject* Pawn;
-			UObject* Cosmetic;
-		} params;
-
-		params.Pawn = InFortPlayerPawn;
-		params.Cosmetic = Cosmetic;
-
-		auto Default__FortItemAndVariantSwapHelpers = FindObject("Default__FortItemAndVariantSwapHelpers");
-
-		ProcessEvent(Default__FortItemAndVariantSwapHelpers, FindObject("Function /Script/FortniteGame.FortItemAndVariantSwapHelpers.PushCosmeticOverrideOntoPawn"), &params);
-	}
-
 	void ShowSkin() {
-		OverridePawnCosmetic(Pawn, "AthenaCharacterItemDefinition /Game/Heroes/Commando/CosmeticCharacterItemDefinitions/CID_Commando_016_F_V1.CID_Commando_016_F_V1");
-
 		struct UFortKismetLibrary_UpdatePlayerCustomCharacterPartsVisualization_Params
 		{
 			UObject* PlayerState;
@@ -420,22 +400,22 @@ public:
 
 	UObject* SpawnActorFromLong(UObject* Class, FTransform trans)
 	{
-		SpawnActorLong = decltype(SpawnActorLong)(Util::FindPattern(crypt("48 8B C4 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70 A8 0F 29 78 98 44 0F 29 40 ? 44 0F 29 88 ? ? ? ? 44 0F 29 90 ? ? ? ? 44 0F 29 98 ? ? ? ? 44 0F 29 A0 ? ? ? ? 44 0F 29 A8 ? ? ? ? 44 0F 29 B0 ? ? ? ? 44 0F 29 B8 ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 45 33 ED 48 89 4C 24 ? 44 89 6C 24 ? 48 8D 05 ? ? ? ? 44 38 2D ? ? ? ? 4C 8B FA 48 8B D9 48 8D 15 ? ? ? ? 49 0F 45 C5 48 8D 4D 18 48 89 45 10 4D 8B F1 49 8B F0 E8 ? ? ? ? 4C 8B 63 30 4C 89 65 C0 4D 85 FF 0F 84 ? ? ? ? 41 8B 87 ? ? ? ? 0F BA E0 19 0F 82 ? ? ? ? A8 01 0F 85 ? ? ? ? E8 ? ? ? ? 48 8B D0 49 8B CF E8 ? ? ? ? 84 C0")));
+		SpawnActorLong = decltype(SpawnActorLong)(Util::FindPattern(crypt("48 8B C4 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70 A8 0F 29 78 98 44 0F 29 40 ? 44 0F 29 88 ? ? ? ? 44 0F 29 90 ? ? ? ? 44 0F 29 98 ? ? ? ? 44 0F 29 A0 ? ? ? ? 44 0F 29 A8 ? ? ? ? 44 0F 29 B0 ? ? ? ? 44 0F 29 B8 ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 45 33 ED 48 89 4C 24 ? 44 89 6C 24 ? 48 8D 05 ? ? ? ? 44 38 2D ? ? ? ? 4C")));
 		auto pWorld = reinterpret_cast<UObject**>(Util::FindPattern(crypt("48 8B 05 ? ? ? ? 4D 8B C1"), true, 3));
 
-		auto parms = FActorSpawnParameters();
-		return SpawnActorLong((*pWorld), Class, &trans, parms);
+		auto params = FActorSpawnParameters();
+		return SpawnActorLong((*pWorld), Class, &trans, params);
 	}
 
 	UObject* SpawnActor(UObject* ClassToSpawn, FVector loc, FRotator rot)
 	{
-		FQuat SpawnQuat;
+		FQuat SpawnQuat{};
 		SpawnQuat.W = 0;
 		SpawnQuat.X = rot.Pitch;
 		SpawnQuat.Y = rot.Roll;
 		SpawnQuat.Z = rot.Yaw;
 
-		FTransform SpawnTrans;
+		FTransform SpawnTrans{};
 		SpawnTrans.Scale3D = FVector(1, 1, 1);
 		SpawnTrans.Translation = loc;
 		SpawnTrans.Rotation = SpawnQuat;
@@ -487,7 +467,7 @@ public:
 class BuildingActorFunctions
 {
 public:
-	void InitializeBuildingActor(UObject* BuildingActor)
+	static void InitializeBuildingActor(UObject* BuildingActor)
 	{
 		auto InitializeKismetSpawnedBuildingActor = FindObject(crypt("Function /Script/FortniteGame.BuildingActor.InitializeKismetSpawnedBuildingActor"));
 
@@ -503,6 +483,18 @@ public:
 
 		ProcessEvent(BuildingActor, InitializeKismetSpawnedBuildingActor, &params);
 	}
+
+	/*static unsigned long __stdcall BuildAsync(void*)
+	{
+		auto CurrentBuildableClass = *reinterpret_cast<UObject**>((uintptr_t)Controller + __int64(FindOffset("FortPlayerController", "CurrentBuildableClass")));
+		auto LastBuildPreviewGridSnapLoc = *reinterpret_cast<FVector*>((uintptr_t)Controller + __int64(FindOffset("FortPlayerController", "LastBuildPreviewGridSnapLoc")));
+		auto LastBuildPreviewGridSnapRot = *reinterpret_cast<FRotator*>((uintptr_t)Controller + __int64(FindOffset("FortPlayerController", "LastBuildPreviewGridSnapRot")));
+
+		auto Build = WorldFunctions::SpawnActor(CurrentBuildableClass, LastBuildPreviewGridSnapLoc, LastBuildPreviewGridSnapRot);
+		BuildingActorFunctions::InitializeBuildingActor(Build);
+
+		return 0;
+	}*/
 };
 
 namespace Functions
