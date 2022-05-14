@@ -935,7 +935,7 @@ static DWORD FindOffset(std::string ClassName, std::string VarName)
 
 inline bool ProcessEvent(UObject* pObject, UObject* pFunction, void* pParams) {
 	auto vtable = *reinterpret_cast<void***>(pObject);
-	auto ProcesseventVtable = static_cast<void(*)(void*, void*, void*)>(vtable[0x4B]); if (!ProcesseventVtable) return false;
+	auto ProcesseventVtable = static_cast<void(*)(void*, void*, void*)>(vtable[0x4C]); if (!ProcesseventVtable) return false;
 	ProcesseventVtable(pObject, pFunction, pParams);
 	return true;
 }
@@ -1080,11 +1080,4 @@ enum class ERHIType : uint8_t
 	D3D12 = 1,
 	Performance = 2,
 	ERHIType_MAX = 3
-};
-
-enum class EFortEmotePlayMode : uint8_t
-{
-	CheckIfOwned = 0,
-	ForcePlay = 1,
-	EFortEmotePlayMode_MAX = 2
 };
